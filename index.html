@@ -34,6 +34,7 @@
       border: none;
       color: #fff;
       border-radius: 8px;
+      box-sizing: border-box;
     }
     button {
       background-color: #6200ea;
@@ -55,6 +56,15 @@
       margin-bottom: 1.5rem;
       padding-bottom: 1rem;
       border-bottom: 1px solid #333;
+    }
+    #paste-area {
+      background: #2c2c2c;
+      padding: 1rem;
+      border-radius: 8px;
+      color: #888;
+      min-height: 120px;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
     }
   </style>
 </head>
@@ -100,7 +110,7 @@
     </select>
     <textarea id="feedback-text" rows="5" placeholder="Write feedback..."></textarea>
     <p style="font-size: 0.9rem; color: #aaa;">Paste image from clipboard below (Ctrl+V):</p>
-    <div contenteditable="true" id="paste-area" style="background:#2c2c2c;padding:1rem;border-radius:8px;color:#888;">Click here and paste image (Ctrl+V)</div>
+    <div contenteditable="true" id="paste-area">Click here and paste image (Ctrl+V)</div>
     <button onclick="addFeedback()">Submit</button>
     <button onclick="logout()">Logout</button>
   </div>
@@ -128,7 +138,7 @@
       "Binayak Sinha": { password: "binayakpass" },
       "Enugonda Vishnu": { password: "vishnupass" },
       "Kavya R": { password: "kavyapass" },
-      "Kasi Vishnu Vardhan": { password: "kasipass" },
+      "Kasi Vishnu Vardhan": { password: "Vishnu@289" },
       "Krishnadithya": { password: "KrishnA@94611" },
       "Hethan_Feedback": { password: "Thk@2004" }
     };
@@ -143,8 +153,43 @@
           const file = item.getAsFile();
           const reader = new FileReader();
           reader.onload = function (e) {
-            pastedImage = e.target.result;
-            document.getElementById('paste-area').innerHTML = `<img src="${pastedImage}" alt="Pasted Image" style="max-width:100%; border-radius:8px;" />`;
+            const img = new Image();
+            img.onload = function () {
+              const MAX_WIDTH = 800;
+              const MAX_HEIGHT = 600;
+              let width = img.width;
+              let height = img.height;
+
+              if (width > height) {
+                if (width > MAX_WIDTH) {
+                  height = Math.round((height * MAX_WIDTH) / width);
+                  width = MAX_WIDTH;
+                }
+              } else {
+                if (height > MAX_HEIGHT) {
+                  width = Math.round((width * MAX_HEIGHT) / height);
+                  height = MAX_HEIGHT;
+                }
+              }
+
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+              pastedImage = compressedDataUrl;
+
+              document.getElementById('paste-area').innerHTML = `<img src="${pastedImage}" alt="Pasted Image" style="max-width:100%; border-radius:8px;" />`;
+
+              // Optional size log:
+              const base64Length = compressedDataUrl.length - ('data:image/jpeg;base64,'.length);
+              const sizeInBytes = 4 * Math.ceil(base64Length / 3) * 0.5624896334383812;
+              console.log(`Compressed image approx size: ${(sizeInBytes / 1024).toFixed(2)} KB`);
+            };
+            img.src = e.target.result;
           };
           reader.readAsDataURL(file);
           break;
@@ -254,9 +299,7 @@
 
     function escapeHtml(text) {
       return text.replace(/[&<>"']/g, function (m) {
-        return ({
-          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        })[m];
+        return ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[m]);
       });
     }
   </script>
