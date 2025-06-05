@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Team Feedback Portal</title>
   <style>
     body {
@@ -51,104 +51,213 @@
       border-radius: 8px;
       margin-top: 0.5rem;
     }
+    .feedback-item {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #333;
+    }
   </style>
 </head>
 <body>
+
   <header>Feedback Portal</header>
+
   <div class="container" id="login-section">
     <h2>Login</h2>
-    <select id="username">
-      <option value="">Select your profile</option>
-      <option value="master">Master (Admin)</option>
-      <option value="alice">Alice</option>
-      <option value="bob">Bob</option>
-      <option value="intern1">Intern1</option>
-    </select>
-    <input type="password" id="password" placeholder="Enter Password" />
-    <button onclick="login()">Login</button>
+    <form onsubmit="login(); return false;">
+      <select id="username" required>
+        <option value="">Select your profile</option>
+        <option value="master">Rithvik K(Admin)</option>
+        <option value="Sri Ram">Sri Ram</option>
+        <option value="Binayak Sinha">Binayak Sinha</option>
+        <option value="Enugonda Vishnu">Enugonda Vishnu</option>
+        <option value="Kavya R">Kavya R</option>
+        <option value="Kasi Vishnu Vardhan">Kasi Vishnu Vardhan</option>
+        <option value="Krishnadithya">Krishnadithya</option>
+        <option value="Hethan_Feedback">Hethan Tirupathi</option>
+      </select>
+      <input type="password" id="password" placeholder="Enter Password" required />
+      <button type="submit">Login</button>
+    </form>
   </div>
 
-  <div class="container" id="feedback-section" style="display: none">
+  <div class="container" id="feedback-section" style="display: none;">
     <h2>Your Feedback</h2>
     <div id="feedback-content"></div>
+    <button onclick="logout()">Logout</button>
   </div>
 
-  <div class="container" id="admin-section" style="display: none">
+  <div class="container" id="admin-section" style="display: none;">
     <h2>Post Feedback</h2>
     <select id="target-user">
-      <option value="alice">Alice</option>
-      <option value="bob">Bob</option>
-      <option value="intern1">Intern1</option>
+      <option value="Sri Ram">Sri Ram</option>
+      <option value="Binayak Sinha">Binayak Sinha</option>
+      <option value="Enugonda Vishnu">Enugonda Vishnu</option>
+      <option value="Kavya R">Kavya R</option>
+      <option value="Kasi Vishnu Vardhan">Kasi Vishnu Vardhan</option>
+      <option value="Krishnadithya">Krishnadithya</option>
+      <option value="Hethan_Feedback">Hethan_Feedback</option>
     </select>
     <textarea id="feedback-text" rows="5" placeholder="Write feedback..."></textarea>
-    <input type="file" id="image-upload" accept="image/*" />
+    <p style="font-size: 0.9rem; color: #aaa;">Paste image from clipboard below (Ctrl+V):</p>
+    <div contenteditable="true" id="paste-area" style="background:#2c2c2c;padding:1rem;border-radius:8px;color:#888;">Click here and paste image (Ctrl+V)</div>
     <button onclick="addFeedback()">Submit</button>
+    <button onclick="logout()">Logout</button>
   </div>
 
   <footer>
-    Made by Rithvik ♥
+    by <a href="https://rithvikkoruturu1.netlify.app" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">Rithvik</a>
   </footer>
 
   <script>
+    const apiKey = '$2a$10$.GBMQlD.bhdS7ra2b8HNVerpIC5.jJi6FrbvFaqpFa2Zu1h6WWmli';
+
+    const binIds = {
+      "Sri Ram": "6840f2d58a456b7966a99f4b",
+      "Binayak Sinha": "6840f2c18960c979a5a55e7c",
+      "Enugonda Vishnu": "6840f29d8a456b7966a99f3c",
+      "Kavya R": "6840f27d8960c979a5a55e66",
+      "Kasi Vishnu Vardhan": "6840f2658960c979a5a55e5f",
+      "Krishnadithya": "6840f2498561e97a501fc408",
+      "Hethan_Feedback": "6840f2378561e97a501fc404"
+    };
+
     const users = {
-      master: { password: "admin123", isAdmin: true },
-      alice: { password: "alicepass", feedback: [] },
-      bob: { password: "bobpass", feedback: [] },
-      intern1: { password: "internpass", feedback: [] },
+      master: { password: "krithvik684", isAdmin: true },
+      "Sri Ram": { password: "Sriram5722" },
+      "Binayak Sinha": { password: "binayakpass" },
+      "Enugonda Vishnu": { password: "vishnupass" },
+      "Kavya R": { password: "kavyapass" },
+      "Kasi Vishnu Vardhan": { password: "kasipass" },
+      "Krishnadithya": { password: "KrishnA@94611" },
+      "Hethan_Feedback": { password: "Thk@2004" }
     };
 
     let currentUser = null;
+    let pastedImage = null;
+
+    document.getElementById('paste-area').addEventListener('paste', function (event) {
+      const items = event.clipboardData.items;
+      for (let item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          const file = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            pastedImage = e.target.result;
+            document.getElementById('paste-area').innerHTML = `<img src="${pastedImage}" alt="Pasted Image" style="max-width:100%; border-radius:8px;" />`;
+          };
+          reader.readAsDataURL(file);
+          break;
+        }
+      }
+    });
 
     function login() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
       if (!users[username] || users[username].password !== password) {
-        alert("Invalid login");
+        alert('Invalid login');
         return;
       }
+
       currentUser = username;
-      document.getElementById("login-section").style.display = "none";
+      document.getElementById('login-section').style.display = 'none';
+
       if (users[username].isAdmin) {
-        document.getElementById("admin-section").style.display = "block";
+        document.getElementById('admin-section').style.display = 'block';
       } else {
-        document.getElementById("feedback-section").style.display = "block";
-        loadFeedback();
+        document.getElementById('feedback-section').style.display = 'block';
+        loadFeedback(username);
       }
     }
 
-    function loadFeedback() {
-      const feedback = users[currentUser].feedback || [];
-      const container = document.getElementById("feedback-content");
-      container.innerHTML = feedback.map(item => {
-        return `<div style="margin-bottom: 1rem;"><p>${item.text}</p>${item.image ? `<img src="${item.image}" />` : ""}</div>`;
-      }).join("");
+    function logout() {
+      currentUser = null;
+      document.getElementById('login-section').style.display = 'block';
+      document.getElementById('admin-section').style.display = 'none';
+      document.getElementById('feedback-section').style.display = 'none';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('feedback-text').value = '';
+      document.getElementById('paste-area').innerHTML = 'Click here and paste image (Ctrl+V)';
+      pastedImage = null;
+      document.getElementById('feedback-content').innerHTML = '';
     }
 
-    function addFeedback() {
-      const target = document.getElementById("target-user").value;
-      const text = document.getElementById("feedback-text").value;
-      const imageInput = document.getElementById("image-upload");
-      const file = imageInput.files[0];
+    async function loadFeedback(user) {
+      const binId = binIds[user];
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+          headers: { 'X-Master-Key': apiKey }
+        });
+        const json = await res.json();
+        const feedback = Array.isArray(json.record) ? json.record : [];
 
-      if (!text.trim()) {
+        const container = document.getElementById('feedback-content');
+        container.innerHTML = feedback.length === 0 ? '<p>No feedback available yet.</p>' :
+          feedback.map(item =>
+            `<div class="feedback-item">
+              <p>${escapeHtml(item.text)}</p>
+              ${item.image ? `<img src="${item.image}" alt="Feedback Image" />` : ''}
+            </div>`
+          ).join('');
+      } catch (e) {
+        alert('Failed to load feedback: ' + e.message);
+      }
+    }
+
+    async function addFeedback() {
+      if (!currentUser || !users[currentUser]?.isAdmin) {
+        alert('Only admin can add feedback');
+        return;
+      }
+
+      const target = document.getElementById('target-user').value;
+      const text = document.getElementById('feedback-text').value.trim();
+
+      if (!text) {
         alert("Feedback cannot be empty");
         return;
       }
 
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          users[target].feedback.push({ text, image: e.target.result });
-          alert("Feedback submitted for " + target);
-          document.getElementById("feedback-text").value = "";
-          imageInput.value = "";
-        };
-        reader.readAsDataURL(file);
-      } else {
-        users[target].feedback.push({ text });
-        alert("Feedback submitted for " + target);
-        document.getElementById("feedback-text").value = "";
+      try {
+        const binId = binIds[target];
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+          headers: { 'X-Master-Key': apiKey }
+        });
+        const json = await res.json();
+        const records = Array.isArray(json.record) ? json.record : [];
+
+        records.push({ text, image: pastedImage });
+
+        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': apiKey
+          },
+          body: JSON.stringify(records)
+        });
+
+        if (!putRes.ok) throw new Error("Failed to update bin");
+
+        alert(`Feedback submitted for ${target}`);
+        document.getElementById('feedback-text').value = '';
+        document.getElementById('paste-area').innerHTML = 'Click here and paste image (Ctrl+V)';
+        pastedImage = null;
+
+      } catch (err) {
+        alert("Error submitting feedback: " + err.message);
       }
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/[&<>"']/g, function (m) {
+        return ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[m];
+      });
     }
   </script>
 </body>
