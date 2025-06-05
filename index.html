@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Feedback Portal</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #1f1f1f;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    .container {
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: #1f1f1f;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #333;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.8rem;
+      background-color: #2c2c2c;
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+    }
+    button {
+      background-color: #6200ea;
+      cursor: pointer;
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      color: #888;
+      border-top: 1px solid #333;
+      margin-top: 3rem;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header>Feedback Portal</header>
+  <div class="container" id="login-section">
+    <h2>Login</h2>
+    <select id="username">
+      <option value="">Select your profile</option>
+      <option value="master">Master (Admin)</option>
+      <option value="alice">Alice</option>
+      <option value="bob">Bob</option>
+      <option value="intern1">Intern1</option>
+    </select>
+    <input type="password" id="password" placeholder="Enter Password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div class="container" id="feedback-section" style="display: none">
+    <h2>Your Feedback</h2>
+    <div id="feedback-content"></div>
+  </div>
+
+  <div class="container" id="admin-section" style="display: none">
+    <h2>Post Feedback</h2>
+    <select id="target-user">
+      <option value="alice">Alice</option>
+      <option value="bob">Bob</option>
+      <option value="intern1">Intern1</option>
+    </select>
+    <textarea id="feedback-text" rows="5" placeholder="Write feedback..."></textarea>
+    <input type="file" id="image-upload" accept="image/*" />
+    <button onclick="addFeedback()">Submit</button>
+  </div>
+
+  <footer>
+    Made by Rithvik ♥
+  </footer>
+
+  <script>
+    const users = {
+      master: { password: "admin123", isAdmin: true },
+      alice: { password: "alicepass", feedback: [] },
+      bob: { password: "bobpass", feedback: [] },
+      intern1: { password: "internpass", feedback: [] },
+    };
+
+    let currentUser = null;
+
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      if (!users[username] || users[username].password !== password) {
+        alert("Invalid login");
+        return;
+      }
+      currentUser = username;
+      document.getElementById("login-section").style.display = "none";
+      if (users[username].isAdmin) {
+        document.getElementById("admin-section").style.display = "block";
+      } else {
+        document.getElementById("feedback-section").style.display = "block";
+        loadFeedback();
+      }
+    }
+
+    function loadFeedback() {
+      const feedback = users[currentUser].feedback || [];
+      const container = document.getElementById("feedback-content");
+      container.innerHTML = feedback.map(item => {
+        return `<div style="margin-bottom: 1rem;"><p>${item.text}</p>${item.image ? `<img src="${item.image}" />` : ""}</div>`;
+      }).join("");
+    }
+
+    function addFeedback() {
+      const target = document.getElementById("target-user").value;
+      const text = document.getElementById("feedback-text").value;
+      const imageInput = document.getElementById("image-upload");
+      const file = imageInput.files[0];
+
+      if (!text.trim()) {
+        alert("Feedback cannot be empty");
+        return;
+      }
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          users[target].feedback.push({ text, image: e.target.result });
+          alert("Feedback submitted for " + target);
+          document.getElementById("feedback-text").value = "";
+          imageInput.value = "";
+        };
+        reader.readAsDataURL(file);
+      } else {
+        users[target].feedback.push({ text });
+        alert("Feedback submitted for " + target);
+        document.getElementById("feedback-text").value = "";
+      }
+    }
+  </script>
+</body>
+</html>
